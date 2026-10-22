@@ -1,0 +1,5 @@
+out/
+testout/
+codebase_summary*
+*.class
+.vscode/
