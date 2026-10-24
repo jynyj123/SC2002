@@ -65,7 +65,7 @@ Adjust relative paths if the source project is stored inside a subfolder.
 | --- | --- | --- |
 | LAW JUN HAO | jwakee23 | Stage 1 game/controller, Waiter, Chef, Cashier and ConsoleUI |
 | JOEY NG | jynyj123 | Stage 1 Customer, RegularCustomer, Table, Order and MenuItem |
-| Member 3 | TODO | Stage 2 VIPCustomer and CriticCustomer |
+| CHOO JUN LE CALEB | calebb221 | Stage 2 VIPCustomer and CriticCustomer |
 | Member 4 | TODO | Stage 3 Host, ComboMeal and Happy Hour |
 | SHI LISHENG | CakesnCoffee | UML class diagram and sequence diagram |
 
@@ -149,7 +149,7 @@ Each completed stage must be independently runnable at its Git tag.
 | Stage | Scope | Required Tag | Current Status |
 | --- | --- | --- | --- |
 | Stage 1 | Basic restaurant operation | `stage-1` | Source implemented; verification/tag status TODO |
-| Stage 2 | Customer behaviour extension | `stage-2` | Planned; update after integration |
+| Stage 2 | Customer behaviour extension | `stage-2` | Implemented; all tests pass; tag after team review |
 | Stage 3 | New staff role and menu policy | `stage-3` | Planned; update after integration |
 
 ### Stage 1 — Basic Restaurant Operation
@@ -171,21 +171,33 @@ Implemented in the reviewed source:
 
 ### Stage 2 — Customer Behaviour Extension
 
-Planned requirements:
+Implemented:
 
-| Customer Type | Waiting Loss per Turn | Billing |
-| --- | --- | --- |
-| Regular | 8 satisfaction | Full price |
-| VIP | 5 satisfaction | 10% discount |
-| Critic | 12 satisfaction | Full price |
+| Customer Type | Waiting Loss per Turn | Billing | Food Choice |
+| --- | --- | --- | --- |
+| Regular | 8 satisfaction | Full price | ID cycle (see below) |
+| VIP | 5 satisfaction | 10% off, rounded to the nearest cent | Same ID cycle as Regular |
+| Critic | 12 satisfaction | Full price | Always Pasta |
 
-The Critic must also have a documented distinct food preference or service
-reaction.
+**Critic rule (our own rule):** a Critic always orders Pasta, the signature
+dish. It is the most expensive item ($18.00) and the slowest to cook
+(2 preparation units). So the Critic pays the most, but loses satisfaction
+fastest while waiting for the slowest dish. The manager has to decide whether
+to put the Critic ahead of other customers. The dish is found by name, so
+adding combos in Stage 3 does not change what a Critic orders.
 
-A reproducible base-setting run must include at least one VIP and one Critic,
-while retaining six total arrivals.
+**Stage 2 arrivals** (`ArrivalSchedule.stage2Setting()`): the base setting
+with two Regular arrivals replaced, still six arrivals in total.
 
-TODO — document the actual Critic rule and mixed-arrival schedule once built.
+| Turn | 1 | 4 | 7 | 10 | 13 | 16 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Customer | Regular #1 | VIP #2 | Critic #3 | Regular #4 | Regular #5 | Regular #6 |
+| Orders | Burger | Pasta | Pasta | Burger | Pasta | Salad |
+
+All three types follow the same seat, order, cook, serve, eat and pay flow.
+The controller, staff and UI never check a customer's type: they call
+`getWaitingLoss()`, `chooseItem()`, `billFor()` and `getTypeName()`, and each
+subclass supplies its own version.
 
 ### Stage 3 — New Staff Role and Menu Policy
 
@@ -494,6 +506,7 @@ Replace `YOUR_BRANCH_NAME` with your actual branch.
 │       │   └── GameState.java
 │       ├── domain/
 │       │   ├── BasicMenuItem.java
+│       │   ├── CriticCustomer.java
 │       │   ├── Customer.java
 │       │   ├── CustomerState.java
 │       │   ├── Menu.java
@@ -504,7 +517,8 @@ Replace `YOUR_BRANCH_NAME` with your actual branch.
 │       │   ├── PricingPolicy.java
 │       │   ├── RegularCustomer.java
 │       │   ├── StandardPricing.java
-│       │   └── Table.java
+│       │   ├── Table.java
+│       │   └── VIPCustomer.java
 │       ├── staff/
 │       │   ├── ActionResult.java
 │       │   ├── Cashier.java
@@ -523,6 +537,7 @@ Replace `YOUR_BRANCH_NAME` with your actual branch.
     ├── ControllerSmokeTest.java
     ├── ExtensionSeamsTest.java
     ├── RandomGamesTest.java
+    ├── Stage2CustomersTest.java
     ├── StaffRulesTest.java
     ├── victory_input.txt
     └── defeat_input.txt
@@ -545,6 +560,8 @@ TODO — update the tree as new stages and documentation are added.
 | `ArrivalSchedule` | Maps turns to customer factories |
 | `Customer` | Holds customer lifecycle, satisfaction, table/order references and behaviour hooks |
 | `RegularCustomer` | Implements Regular customer behaviour |
+| `VIPCustomer` | Stage 2: loses 5 per waiting turn, pays 10% less |
+| `CriticCustomer` | Stage 2: loses 12 per waiting turn, always orders Pasta |
 | `Table` | Tracks table occupancy |
 | `Order` | Stores selected item, locked bill, preparation progress and order status |
 | `MenuItem` | Defines the contract for orderable items |
@@ -564,7 +581,7 @@ TODO — update the tree as new stages and documentation are added.
 - Encapsulation: customer and order data are stored in private fields and
   exposed through queries and transition methods. Additional transition
   guards remain a potential improvement in the original reviewed code.
-- Inheritance: `RegularCustomer` extends `Customer`.
+- Inheritance: `RegularCustomer`, `VIPCustomer` and `CriticCustomer` extend `Customer`.
 - Polymorphism: customer selection, waiting loss, and billing are expressed
   through customer methods; pricing is accessed through `PricingPolicy`.
 - Interface-based dependencies: the controller uses `GameUI`, and ordering
@@ -588,6 +605,7 @@ The current tests are plain Java programs. They do not require JUnit.
 | `RandomGamesTest` | Runs 3,000 seeded random games and checks final-state invariants and reported totals |
 | `ConsoleUITest` | Generates replay scripts and checks console input handling and victory/defeat replays |
 | `ExtensionSeamsTest` | Checks test-only customer/pricing extension examples and configurable arrivals |
+| `Stage2CustomersTest` | VIP and Critic loss, bills, rounding and food choice; prices locked through the real Waiter; Stage 2 arrivals; abandonment timing through `GameController`; 3,000 random Stage 2 games; no customer-type checks in controller, staff or UI |
 
 Test presence does not mean that tests have passed.
 
@@ -615,6 +633,7 @@ java -cp "out;testout" StaffRulesTest
 java -cp "out;testout" ControllerSmokeTest
 java -cp "out;testout" RandomGamesTest
 java -cp "out;testout" ConsoleUITest
+java -cp "out;testout" Stage2CustomersTest
 ```
 
 If included in the checked-out snapshot:
@@ -633,6 +652,7 @@ java -cp out:testout StaffRulesTest
 java -cp out:testout ControllerSmokeTest
 java -cp out:testout RandomGamesTest
 java -cp out:testout ConsoleUITest
+java -cp out:testout Stage2CustomersTest
 ```
 
 If included in the checked-out snapshot:
@@ -709,8 +729,26 @@ The defeat replay makes the Waiter and Chef wait throughout the game.
 It demonstrates that the game still runs all 18 turns and that neglected
 customers can abandon the restaurant.
 
-Later stages require their own reproducible evidence after their customer
-and pricing behaviour is integrated.
+### Expected Stage 2 Outcomes
+
+From Stage 2, `Main` and `ConsoleUITest` use `ArrivalSchedule.stage2Setting()`,
+so the replay files above are the Stage 2 runs. The Stage 1 numbers above apply
+when the `stage-1` tag is checked out.
+
+| Metric | Victory Replay | Defeat Replay |
+| --- | --- | --- |
+| Final result | VICTORY | DEFEAT |
+| Paid customers | 4 | 0 |
+| Revenue | $64.20 | $0.00 |
+| Average paid satisfaction | 74.3 | N/A |
+| Served customers | 5 | 0 |
+| Unhappy departures | 0 | 2 (Regular #1 on turn 13, Critic #3 on turn 15) |
+| Turns used | 18 | 18 |
+
+In the victory replay the VIP's Pasta is charged $16.20 instead of $18.00, and
+the Critic pays $18.00 but at satisfaction 52 (the other paid customers are 84,
+85 and 76). In the defeat replay the VIP is still waiting at the end with
+satisfaction 25, because it only loses 5 per turn.
 
 ## Stage Versions and Change Evidence
 
@@ -735,21 +773,37 @@ documentation describing the intended stages.
 
 ### Stage 1 → Stage 2
 
-Compare URL: TODO — insert the actual GitHub compare or commit link.
+Compare URL: https://github.com/jynyj123/SC2002/compare/stage-1...stage-2 (works once the `stage-2` tag is pushed)
 
 | Change Type | Exact File | Change | Reason |
 | --- | --- | --- | --- |
-| Added | TODO | TODO | TODO |
-| Modified | TODO | TODO | TODO |
-| Deleted | TODO, or None | TODO | TODO |
+| Added | `src/rush/domain/VIPCustomer.java` | New `Customer` subclass: loss 5, 10% off, Regular food cycle | New customer type |
+| Added | `src/rush/domain/CriticCustomer.java` | New `Customer` subclass: loss 12, full price, always Pasta | New customer type |
+| Added | `test/Stage2CustomersTest.java` | Stage 2 checks (see Testing) | Evidence for Stage 2 |
+| Modified | `src/rush/control/ArrivalSchedule.java` | Added `stage2Setting()` next to `basicSetting()` | Setup only: a new arrival plan. The class's logic is unchanged |
+| Modified | `src/rush/Main.java` | Uses `stage2Setting()` instead of `basicSetting()` | Wiring, so the game runs the Stage 2 arrivals |
+| Modified | `test/ConsoleUITest.java` | Uses `stage2Setting()` | So the generated replay files match what `Main` runs |
+| Modified | `test/victory_input.txt` | Regenerated by `ConsoleUITest` | Stage 2 victory replay |
+| Modified | `README.md`, `TEST_NOTES.md` | Stage 2 documentation | Brief Section 5 |
+| Deleted | None | | |
 
-Explain:
-
-- How VIP and Critic behaviour is dispatched through customer objects.
-- What arrival/setup changes were necessary.
-- What Critic-specific rule was chosen.
-- How the Stage 1 service flow was preserved.
-- Which regression tests or replays were executed.
+- **Dispatch through customer objects:** VIP and Critic override
+  `getWaitingLoss()`, `chooseItem()`, `billFor()` (VIP only) and
+  `getTypeName()`. The controller still calls `customer.loseWaitingSatisfaction()`,
+  the Waiter still calls `customer.chooseItem(menu)` and
+  `pricing.priceFor(customer, item)`, and Java picks the right subclass method
+  at runtime. No `instanceof` or type checks were added (checked by
+  `Stage2CustomersTest`).
+- **Setup changes:** only a new arrival plan and the one-line wiring change in
+  `Main`. `Customer`, `Waiter`, `Chef`, `Cashier`, `GameController`,
+  `GameState` and `ConsoleUI` are unchanged.
+- **Critic rule:** always orders Pasta (see Stage 2 above).
+- **Stage 1 flow preserved:** `StaffRulesTest`, `ControllerSmokeTest`,
+  `RandomGamesTest` and `ExtensionSeamsTest` still use the all-Regular
+  `basicSetting()` and still pass with the same results (good play: VICTORY,
+  4 paid, $57.00, 78.0).
+- **Tests and replays run:** all six test programs pass, and both replay
+  files give the expected Stage 2 results above.
 
 ### Stage 2 → Stage 3
 
