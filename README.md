@@ -65,7 +65,7 @@ Adjust relative paths if the source project is stored inside a subfolder.
 | --- | --- | --- |
 | LAW JUN HAO | jwakee23 | Stage 1 game/controller, Waiter, Chef, Cashier and ConsoleUI |
 | JOEY NG | jynyj123 | Stage 1 Customer, RegularCustomer, Table, Order and MenuItem |
-| CHOO JUN LE CALEB | calebb221 | Stage 2 VIPCustomer and CriticCustomer |
+| CALEB | calebb221 | Stage 2 VIPCustomer and CriticCustomer |
 | Member 4 | TODO | Stage 3 Host, ComboMeal and Happy Hour |
 | SHI LISHENG | CakesnCoffee | UML class diagram and sequence diagram |
 
