@@ -29,7 +29,7 @@ public class Main {
 
         // Connect all the parts of the game together
         GameController game = new GameController(
-                state, ArrivalSchedule.basicSetting(), new Waiter(menu, new StandardPricing()), new Chef(), new Cashier(), ui);
+                state, ArrivalSchedule.stage2Setting(), new Waiter(menu, new StandardPricing()), new Chef(), new Cashier(), ui);
 
         try {
             game.run();
