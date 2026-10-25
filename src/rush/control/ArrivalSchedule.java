@@ -3,8 +3,10 @@ package rush.control;
 
 import java.util.HashMap;
 import java.util.Map;
+import rush.domain.CriticCustomer;
 import rush.domain.Customer;
 import rush.domain.RegularCustomer;
+import rush.domain.VIPCustomer;
 
 
 /**
@@ -38,6 +40,25 @@ public class ArrivalSchedule {
         for (int turn : GameConfig.ARRIVAL_TURNS) {
             plan.put(turn, RegularCustomer::new);
         }
+
+        return new ArrivalSchedule(plan);
+    }
+
+
+    /**
+     * Stage 2 setting: same six arrival turns as the base setting,
+     * but the turn 4 arrival is a VIP and the turn 7 arrival is a Critic
+     * Only two Regular arrivals are replaced, as the brief allows
+     */
+    public static ArrivalSchedule stage2Setting() {
+        Map<Integer, CustomerFactory> plan = new HashMap<>();
+
+        for (int turn : GameConfig.ARRIVAL_TURNS) {
+            plan.put(turn, RegularCustomer::new);
+        }
+
+        plan.put(4, VIPCustomer::new);
+        plan.put(7, CriticCustomer::new);
 
         return new ArrivalSchedule(plan);
     }

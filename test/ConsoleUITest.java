@@ -71,7 +71,7 @@ public class ConsoleUITest {
     // Creates a game using the standard menu, pricing and staff
     static GameController game(GameState state, GameUI ui) {
         Menu menu = Menu.standard();
-        return new GameController(state, ArrivalSchedule.basicSetting(), new Waiter(menu, new StandardPricing()), new Chef(), new Cashier(), ui);
+        return new GameController(state, ArrivalSchedule.stage2Setting(), new Waiter(menu, new StandardPricing()), new Chef(), new Cashier(), ui);
     }
 
 
