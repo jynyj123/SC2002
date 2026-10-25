@@ -3,21 +3,24 @@
 ### NTU SC2002 Group Assignment - Java Console Restaurant Management Game
 
 Takes the role of a restaurant manager and coordinate a small team of staff
-across an 18-turn service. Decide which customers to seat, whose orders to
+across 18 turns. Decide which customers to seat, whose orders to
 take, which dishes to prepare, and which customers to serve first.
 
-With only two tables and limited staff capacity, every decision matters.
-Efficient service earns revenue and preserves customer satisfaction, while
+With only two tables and limited staff capacity, it is important to make the correct decisions.
+Efficient service will earn revenue and preserves customer satisfaction, while
 delays may cause customers to leave without paying.
 
 The project is developed through three runnable stages to demonstrate how
 an object-oriented design can support progressively richer customer
 behaviour, staff roles, and pricing policies.
 
-> Development status: Stage 1 functionality is implemented in the reviewed
-> source. Build verification, test execution, and Git tag status must be
-> confirmed by the team. Stage 2 and Stage 3 descriptions below are planned
-> requirements unless explicitly marked as completed.
+> Development status: Stage 1 is completed, compiled, tested, and tagged,
+> with victory and defeat runs verified. Stage 2 functionality
+> (VIP and Critic customers) has been implemented and submitted in PR #1,
+> pending review, merge, and creation of the `stage-2` tag.
+> Stage 2 regression tests are reported by the contributor to pass with
+> the same results. Stage 3 descriptions below remain planned requirements
+> unless explicitly marked as completed.
 
 ## Contents
 
@@ -50,9 +53,6 @@ behaviour, staff roles, and pricing policies.
 - UML diagrams: TODO - add actual diagram locations
 - Presentation video: TODO - add an accessible video link or file location
 
-Documentation links above assume these files are at the repository root.
-Adjust relative paths if the source project is stored inside a subfolder.
-
 ## Team Members
 
 - Lab: SCE3
@@ -60,21 +60,21 @@ Adjust relative paths if the source project is stored inside a subfolder.
 
 | Name | GitHub Account | Main Responsibility |
 | --- | --- | --- |
-| LAW JUN HAO | jwakee23 | Stage 1 game/controller, Waiter, Chef, Cashier and ConsoleUI |
-| JOEY NG | jynyj123 | Stage 1 Customer, RegularCustomer, Table, Order and MenuItem |
-| Member 3 | TODO | Stage 2 VIPCustomer and CriticCustomer |
-| Member 4 | TODO | Stage 3 Host, ComboMeal and Happy Hour |
+| LAW JUN HAO | jwakee23 | Stage 1 game/controller, Waiter, Chef, Cashier, and ConsoleUI |
+| JOEY NG | jynyj123 | Stage 1 Customer, RegularCustomer, Table, Order, MenuItem, and  |
+| CALEB CHOO | calebb221 | Stage 2 VIPCustomer and CriticCustomer |
+| BENJAMIN NG | TODO | Stage 3 Host, ComboMeal and Happy Hour |
 | SHI LISHENG | CakesnCoffee | UML class diagram and sequence diagram |
 
 ## Project Highlights
 
 ### Object-Oriented Customer Behaviour
 
-`Customer` defines shared customer state and behaviour hooks, while
+`Customer` defines shared customer state and behaviour hooks, 
 `RegularCustomer` supplies the Stage 1 waiting-loss and food-selection rules.
 
 The design provides extension points for later customer types through
-methods such as:
+the following methods:
 
 - `getWaitingLoss()`
 - `chooseItem(Menu menu)`
@@ -145,8 +145,8 @@ Each completed stage must be independently runnable at its Git tag.
 
 | Stage | Scope | Required Tag | Current Status |
 | --- | --- | --- | --- |
-| Stage 1 | Basic restaurant operation | `stage-1` | Source implemented; verification/tag status TODO |
-| Stage 2 | Customer behaviour extension | `stage-2` | Planned; update after integration |
+| Stage 1 | Basic restaurant operation | `stage-1` | Completed (compiled, tested, and tagged; victory and defeat runs verified) |
+| Stage 2 | Customer behaviour extension | `stage-2` | Implementation complete in PR #1; reviewed, merged, and tagged|
 | Stage 3 | New staff role and menu policy | `stage-3` | Planned; update after integration |
 
 ### Stage 1 - Basic Restaurant Operation
@@ -168,7 +168,12 @@ Implemented in the reviewed source:
 
 ### Stage 2 - Customer Behaviour Extension
 
-Planned requirements:
+VIP and Critic customers have been implemented and submitted in
+[PR #1](https://github.com/jynyj123/SC2002/pull/1).
+
+`stage-2` tag will has been created on the verified merge commit.
+
+Stage 2 behaviour requirements:
 
 | Customer Type | Waiting Loss per Turn | Billing |
 | --- | --- | --- |
@@ -182,7 +187,9 @@ reaction.
 A reproducible base-setting run must include at least one VIP and one Critic,
 while retaining six total arrivals.
 
-TODO - document the actual Critic rule and mixed-arrival schedule once built.
+The implementation adds `ArrivalSchedule.stage2Setting()` and updates
+`Main` and `ConsoleUITest` to use the Stage 2 arrivals.
+
 
 ### Stage 3 - New Staff Role and Menu Policy
 
@@ -404,8 +411,8 @@ rush.Main
 ### Get the Source
 
 ```bash
-git clone [https://github.com/jynyj123/SC2002.git](https://github.com/jynyj123/SC2002.git)
-cd SC2002
+git clone [https://github.com/jynyj123/test.git](https://github.com/jynyj123/test.git)
+cd test
 ```
 
 All build commands below must be executed from the folder containing
@@ -501,7 +508,9 @@ Replace `YOUR_BRANCH_NAME` with your actual branch.
 │       │   ├── PricingPolicy.java
 │       │   ├── RegularCustomer.java
 │       │   ├── StandardPricing.java
-│       │   └── Table.java
+│       │   ├── Table.java
+│       │   ├── CriticCustomer.java
+│       │   └── VIPCustomer.java
 │       ├── staff/
 │       │   ├── ActionResult.java
 │       │   ├── Cashier.java
@@ -868,4 +877,3 @@ before submission.
 ## Acknowledgements and Declarations
 
 This project is developed for the SC2002 Restaurant Rush group assignment.
-
