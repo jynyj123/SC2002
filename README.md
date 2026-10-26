@@ -14,13 +14,9 @@ The project is developed through three runnable stages to demonstrate how
 an object-oriented design can support progressively richer customer
 behaviour, staff roles, and pricing policies.
 
-> Development status: Stage 1 is completed, compiled, tested, and tagged,
-> with victory and defeat runs verified. Stage 2 functionality
-> (VIP and Critic customers) has been implemented and submitted in PR #1,
-> pending review, merge, and creation of the `stage-2` tag.
-> Stage 2 regression tests are reported by the contributor to pass with
-> the same results. Stage 3 descriptions below remain planned requirements
-> unless explicitly marked as completed.
+> Development status: Stage 1 and Stage 2 are completed and tagged.
+> Stage 3 (Host, ComboMeal and Happy Hour) is implemented on the `stage-3`
+> branch with all tests passing, pending review, merge and the `stage-3` tag.
 
 ## Contents
 
@@ -63,7 +59,7 @@ behaviour, staff roles, and pricing policies.
 | LAW JUN HAO | jwakee23 | Stage 1 game/controller, Waiter, Chef, Cashier, and ConsoleUI |
 | JOEY NG | jynyj123 | Stage 1 Customer, RegularCustomer, Table, Order, MenuItem, and  |
 | CALEB CHOO | calebb221 | Stage 2 VIPCustomer and CriticCustomer |
-| BENJAMIN NG | TODO | Stage 3 Host, ComboMeal and Happy Hour |
+| BENJAMIN NG | benngsr | Stage 3 Host, ComboMeal and Happy Hour |
 | SHI LISHENG | CakesnCoffee | UML class diagram and sequence diagram |
 
 ## Project Highlights
@@ -147,7 +143,7 @@ Each completed stage must be independently runnable at its Git tag.
 | --- | --- | --- | --- |
 | Stage 1 | Basic restaurant operation | `stage-1` | Completed (compiled, tested, and tagged; victory and defeat runs verified) |
 | Stage 2 | Customer behaviour extension | `stage-2` | Implementation complete in PR #1; reviewed, merged, and tagged|
-| Stage 3 | New staff role and menu policy | `stage-3` | Planned; update after integration |
+| Stage 3 | New staff role and menu policy | `stage-3` | Implemented on the `stage-3` branch; all tests pass; pending review, merge and tag |
 
 ### Stage 1 - Basic Restaurant Operation
 
@@ -193,48 +189,74 @@ The implementation adds `ArrivalSchedule.stage2Setting()` and updates
 
 ### Stage 3 - New Staff Role and Menu Policy
 
-Planned requirements:
+Implemented on the `stage-3` branch. Stage 3 keeps the Stage 2 arrivals
+(T1 Regular, T4 VIP, T7 Critic, then Regular on 10, 13 and 16).
 
 #### Host
 
-- Seats at most one queued customer per turn.
-- Works in addition to the Waiter's task.
-- Does not remove the Waiter's ability to seat customers.
+- New staff class `Host`. Seats at most one queued customer per turn, on top
+  of the Waiter's task. The Waiter can still seat customers too.
+- **The Host acts before the Waiter.** So the Waiter can take the order of a
+  customer the Host has just seated, in the same turn.
+- The Host and Waiter use the same seating rule (`staff/Seating`): the
+  customer must be in the queue and a table must be free, and the
+  lowest-numbered free table is used.
+- An invalid Host choice is explained and asked again, like the other staff.
 
 #### ComboMeal
 
-- Contains two existing menu items.
-- Preparation units equal the sum of the components' units.
-- Base price equals 90% of their combined price, rounded to the nearest cent.
+- `ComboMeal` implements `MenuItem` and is made of two existing menu items
+  (composition).
+- Preparation units = the sum of the two items' units.
+- Price = 90% of the two items' combined price, rounded to the nearest cent.
+- The Stage 3 menu (`Menu.stage3()`) has the three dishes plus three combos:
 
-Example:
+| Combo | Price | Preparation Units |
+| --- | --- | --- |
+| Salad + Burger Combo | ($9.00 + $15.00) × 0.9 = $21.60 | 1 + 1 = 2 |
+| Salad + Pasta Combo | ($9.00 + $18.00) × 0.9 = $24.30 | 1 + 2 = 3 |
+| Burger + Pasta Combo | ($15.00 + $18.00) × 0.9 = $29.70 | 1 + 2 = 3 |
 
-```text
-Salad + Pasta
-Price: ($9.00 + $18.00) × 0.9 = $24.30
-Preparation: 1 + 2 = 3 units
-```
+**Combo-selection rule:** Regular and VIP customers still work out their usual
+dish from the ID cycle (Salad, Burger, Pasta). A customer with an **even ID**
+upgrades to the combo that contains their usual dish:
 
-TODO - document the actual customer combo-selection rule.
+| Usual dish | Even-ID customer orders |
+| --- | --- |
+| Salad | Salad + Burger Combo |
+| Burger | Burger + Pasta Combo |
+| Pasta | Salad + Pasta Combo |
+
+Odd-ID customers order their usual dish. The Critic always orders plain Pasta.
+If the menu has no combos, nobody upgrades, so Stage 1 and Stage 2 behave
+exactly as before.
 
 #### Happy Hour
 
-- Can be activated once per game at the start of a turn.
-- Lasts for the activation turn and the following turn.
-- Displays its remaining duration.
-- Gives 20% off orders taken while active.
-- Restores 15 satisfaction at turn start to eligible customers still
-  waiting for a table or food, capped at 100.
-- Applies the VIP discount before the Happy Hour discount.
-- Does not change bills for orders already taken.
-- Does not affect customers who have left.
-
-Example:
+- At the start of every turn until it has been used, the game asks
+  `Switch on Happy Hour now? (y/n)`. It can be used once per game.
+- It is active on the turn it is switched on and the next turn. The game
+  shows `Happy Hour: ACTIVE, N turn(s) left`. If it is switched on at turn
+  18 it shows 1 turn left, because the game ends after turn 18.
+- Orders taken while it is active get 20% off. The price is still locked when
+  the order is taken, so orders taken earlier keep their price.
+- At the start of each active turn, customers still waiting for a table or
+  for food (in the queue, seated, or ordered but not served) recover 15
+  satisfaction, up to 100. Customers who are eating, ready to pay, paid or
+  have left are not affected.
+- The VIP discount is applied first, then Happy Hour. Each step is rounded to
+  the nearest cent (half-up), in integer cents.
 
 ```text
 VIP Burger during Happy Hour:
-$15.00 × 0.9 × 0.8 = $10.80
+1500 × 0.9 = 1350, then 1350 × 0.8 = 1080  ->  $10.80
+
+VIP Salad + Pasta Combo during Happy Hour:
+2430 × 0.9 = 2187, then 2187 × 0.8 = 1749.6, rounded to 1750  ->  $17.50
 ```
+
+`HappyHourPricing` wraps `StandardPricing` (decorator), so the Waiter did not
+need to change.
 
 ## Game Rules
 
@@ -287,6 +309,13 @@ Regular customers use a deterministic customer-ID cycle:
 The implementation names the base dishes explicitly, so adding an item to
 the menu does not automatically change this rule.
 
+VIP customers use the same cycle. The Critic always orders Pasta.
+
+From Stage 3, even-ID Regular and VIP customers upgrade to a combo when the
+menu has combos (see [ComboMeal](#combomeal)). In the Stage 3 game that means
+#2 (VIP) orders the Salad + Pasta Combo, #4 the Burger + Pasta Combo, and #6
+the Salad + Burger Combo.
+
 ### Turn Sequence
 
 The Stage 1 controller performs:
@@ -303,6 +332,22 @@ After turn 18, evaluate and display the final result.
 
 The Waiter acts before the Chef, allowing the Chef to work on an order taken
 during the current turn.
+
+Stage 3 adds two steps to the start of the turn and one staff choice:
+
+1. Add any scheduled arrival.
+2. Display the updated restaurant state.
+3. **Happy Hour:** if not used yet, ask whether to switch it on. If it is
+   active, show the turns left and apply the +15 recovery.
+4. Show what each staff member can do.
+5. **Ask for and execute a valid Host task.**
+6. Ask for and execute a valid Waiter task.
+7. Ask for and execute a valid Chef task.
+8. Eating, payment, waiting loss, abandonment and the summary, as before.
+
+The brief only says Happy Hour starts "at the start of a turn". We show the
+board first so the manager can see the queue before deciding, and recovery
+happens before any staff action.
 
 ### Service and Payment Timing
 
@@ -346,6 +391,20 @@ under this implementation's food-selection rule.
 | 6 | Cashier collects $18.00 and releases the table | 76 recorded |
 
 ## How to Play
+
+### Happy Hour Prompt (Stage 3)
+
+Until Happy Hour has been used, each turn starts with
+`Switch on Happy Hour now? (y/n)`. Type `y` or `n`.
+
+### Host Controls (Stage 3)
+
+| Input | Action |
+| --- | --- |
+| `1` | Seat a queued customer |
+| `0` | Wait |
+
+Enter a customer ID when prompted. The Host is asked before the Waiter.
 
 ### Waiter Controls
 
@@ -498,8 +557,12 @@ Replace `YOUR_BRANCH_NAME` with your actual branch.
 │       │   └── GameState.java
 │       ├── domain/
 │       │   ├── BasicMenuItem.java
+│       │   ├── ComboMeal.java          (Stage 3)
+│       │   ├── CriticCustomer.java     (Stage 2)
 │       │   ├── Customer.java
 │       │   ├── CustomerState.java
+│       │   ├── HappyHour.java          (Stage 3)
+│       │   ├── HappyHourPricing.java   (Stage 3)
 │       │   ├── Menu.java
 │       │   ├── MenuItem.java
 │       │   ├── Money.java
@@ -509,18 +572,21 @@ Replace `YOUR_BRANCH_NAME` with your actual branch.
 │       │   ├── RegularCustomer.java
 │       │   ├── StandardPricing.java
 │       │   ├── Table.java
-│       │   ├── CriticCustomer.java
-│       │   └── VIPCustomer.java
+│       │   └── VIPCustomer.java        (Stage 2)
 │       ├── staff/
 │       │   ├── ActionResult.java
 │       │   ├── Cashier.java
 │       │   ├── Chef.java
+│       │   ├── Host.java               (Stage 3)
+│       │   ├── Seating.java            (Stage 3)
 │       │   └── Waiter.java
 │       └── ui/
 │           ├── ChefAction.java
 │           ├── ChefChoice.java
 │           ├── ConsoleUI.java
 │           ├── GameUI.java
+│           ├── HostAction.java         (Stage 3)
+│           ├── HostChoice.java         (Stage 3)
 │           ├── InputEndedException.java
 │           ├── WaiterAction.java
 │           └── WaiterChoice.java
@@ -530,14 +596,14 @@ Replace `YOUR_BRANCH_NAME` with your actual branch.
     ├── ExtensionSeamsTest.java
     ├── RandomGamesTest.java
     ├── StaffRulesTest.java
+    ├── Stage2CustomersTest.java        (Stage 2)
+    ├── Stage3Test.java                 (Stage 3)
     ├── victory_input.txt
     └── defeat_input.txt
 ```
 
-This reflects the reviewed Stage 1 layout. Replay files are generated by
-`ConsoleUITest` if not already present.
-
-TODO - update the tree as new stages and documentation are added.
+This is the Stage 3 layout. Replay files are generated by `ConsoleUITest`
+if not already present.
 
 ## Architecture and Responsibilities
 
@@ -564,6 +630,13 @@ TODO - update the tree as new stages and documentation are added.
 | `GameUI` | Defines the controller/interface boundary |
 | `ConsoleUI` | Implements terminal display and input |
 | `ActionResult` | Reports staff-action success or failure and its explanation |
+| `VIPCustomer`, `CriticCustomer` | Stage 2 customer types (own waiting loss, billing and food choice) |
+| `ComboMeal` | Stage 3: a `MenuItem` made of two menu items; price and units come from its components |
+| `HappyHour` | Stage 3: remembers when Happy Hour was switched on; answers "active on turn T?" and "turns left" |
+| `HappyHourPricing` | Stage 3: `PricingPolicy` decorator that takes 20% off the wrapped policy's price while Happy Hour is active |
+| `Host` | Stage 3: seats one queued customer per turn |
+| `Seating` | Stage 3: seating checks shared by `Host` and `Waiter` (package-private) |
+| `HostAction`, `HostChoice` | Stage 3: the manager's Host decision, same shape as `WaiterChoice` |
 
 ### Object-Oriented Design
 
@@ -594,6 +667,8 @@ The current tests are plain Java programs. They do not require JUnit.
 | `RandomGamesTest` | Runs 3,000 seeded random games and checks final-state invariants and reported totals |
 | `ConsoleUITest` | Generates replay scripts and checks console input handling and victory/defeat replays |
 | `ExtensionSeamsTest` | Checks test-only customer/pricing extension examples and configurable arrivals |
+| `Stage2CustomersTest` | VIP and Critic rules, Stage 2 arrivals, 3,000 random Stage 2 games, and a scan for customer-type checks |
+| `Stage3Test` | Combo prices and units, combo-selection rule, Happy Hour timing, pricing, rounding and recovery, Host seating and re-asking, 3,000 random Stage 3 games |
 
 Test presence does not mean that tests have passed.
 
@@ -627,6 +702,8 @@ If included in the checked-out snapshot:
 
 ```powershell
 java -cp "out;testout" ExtensionSeamsTest
+java -cp "out;testout" Stage2CustomersTest
+java -cp "out;testout" Stage3Test
 ```
 
 ### Compile and Run Tests - macOS / Linux
@@ -645,6 +722,8 @@ If included in the checked-out snapshot:
 
 ```bash
 java -cp out:testout ExtensionSeamsTest
+java -cp out:testout Stage2CustomersTest
+java -cp out:testout Stage3Test
 ```
 
 ### Verification Record
@@ -705,6 +784,33 @@ They must be confirmed against the final Stage 1 commit.
 | Unhappy departures | 0 | 2 |
 | Turns used | 18 | 18 |
 
+### Expected Stage 3 Outcomes
+
+Checked on the `stage-3` branch (JDK 26, Windows 11).
+
+| Metric | Victory Replay | Defeat Replay |
+| --- | --- | --- |
+| Final result | VICTORY | DEFEAT |
+| Paid customers | 5 | 0 |
+| Revenue | $98.20 | $0.00 |
+| Average paid satisfaction | 78.0 | N/A |
+| Served customers | 5 | 0 |
+| Unhappy departures | 0 | 2 (Regular #1 on turn 13, Critic #3 on turn 15) |
+| Turns used | 18 | 18 |
+
+Victory replay bills: #1 Burger $15.00, #2 VIP Salad + Pasta Combo $17.50
+(Happy Hour), #3 Critic Pasta $18.00, #4 Burger + Pasta Combo $29.70,
+#5 Pasta $18.00. #6 orders the Salad + Burger Combo but arrives on turn 16,
+so they cannot pay before the game ends.
+
+Stage 3 features in the victory replay:
+
+- The Host seats every customer, and on turn 2 makes one invalid choice
+  (seat customer 1, who is already seated). The game explains why and asks again.
+- Happy Hour is switched on at turn 4. The VIP orders the Salad + Pasta Combo
+  that turn for $17.50. On turn 5 the VIP recovers 95 -> 100.
+- The first Happy Hour prompt gets `maybe`, which is rejected.
+
 ### What the Replays Demonstrate
 
 The victory replay prioritizes service sufficiently to meet the targets.
@@ -759,23 +865,51 @@ Explain:
 
 ### Stage 2 → Stage 3
 
-Compare URL: TODO - insert the actual GitHub compare or commit link.
+Compare URL: https://github.com/jynyj123/SC2002/compare/stage-2...stage-3
 
 | Change Type | Exact File | Change | Reason |
 | --- | --- | --- | --- |
-| Added | TODO | TODO | TODO |
-| Modified | TODO | TODO | TODO |
-| Deleted | TODO, or None | TODO | TODO |
+| Added | `src/rush/domain/ComboMeal.java` | `MenuItem` made of two menu items; price 90% (nearest cent), units summed | ComboMeal requirement; plugs into the existing `MenuItem` seam |
+| Added | `src/rush/domain/HappyHour.java` | Once-per-game switch; `isActiveOn(turn)`, `turnsRemaining(turn)` | Keeps Happy Hour timing in one place |
+| Added | `src/rush/domain/HappyHourPricing.java` | `PricingPolicy` decorator: 20% off the wrapped price while active | Happy Hour pricing without editing the Waiter (planned seam in `CONTRACT.md`) |
+| Added | `src/rush/staff/Host.java` | `seatCustomer`, `describeAvailableTasks` | Host requirement |
+| Added | `src/rush/staff/Seating.java` | Seating checks moved out of `Waiter` | Host and Waiter share one seating rule instead of a copy |
+| Added | `src/rush/ui/HostAction.java`, `src/rush/ui/HostChoice.java` | Host decision types | Same shape as `WaiterAction` / `WaiterChoice` |
+| Added | `test/Stage3Test.java` | Stage 3 checks | Evidence for every Stage 3 rule |
+| Modified | `src/rush/control/GameController.java` | New `stepHappyHour()` and Host step; new 8-argument constructor | Host and Happy Hour need controller steps (planned seam). The old 6-argument constructor is kept and runs the Stage 1/2 game with no Host or Happy Hour |
+| Modified | `src/rush/ui/GameUI.java` | Added `askHostChoice` and `askHappyHourActivation` as **default** methods | The controller needs these choices. Default methods (Host waits, Happy Hour off) mean the four existing test UIs compile and behave as before |
+| Modified | `src/rush/ui/ConsoleUI.java` | Implements the y/n Happy Hour prompt and the Host menu | Console input for the new choices (format checks only, no game rules) |
+| Modified | `src/rush/domain/Customer.java` | Added `recoverSatisfaction(int)` and protected `chooseByIdRule(Menu)` | Recovery is a satisfaction change, so it belongs with the satisfaction field (planned seam). The ID food rule was copied in Regular and VIP; it now lives once, with the combo upgrade |
+| Modified | `src/rush/domain/RegularCustomer.java`, `src/rush/domain/VIPCustomer.java` | `chooseItem` calls `chooseByIdRule`; copied `DISH_CYCLE` removed | Same rule as before on a menu with no combos; even IDs upgrade to a combo on the Stage 3 menu |
+| Modified | `src/rush/domain/Menu.java` | Added `Menu.stage3()` | Menu with the three combos, built from the same dish objects |
+| Modified | `src/rush/staff/Waiter.java` | `seatCustomer` delegates to `Seating` | Shared with the Host. Same checks and messages as before |
+| Modified | `src/rush/Main.java` | Stage 3 wiring: `Menu.stage3()`, `HappyHourPricing`, `Host` | Small setup change |
+| Modified | `test/ConsoleUITest.java` | `game()` mirrors the new `Main`; recorder also types Host and Happy Hour inputs; new checks | Replays must use the Stage 3 setup and show the Stage 3 features |
+| Modified | `test/victory_input.txt`, `test/defeat_input.txt` | Regenerated by `ConsoleUITest` | Inputs now include the Host and Happy Hour prompts |
+| Deleted | None | | |
 
-Explain:
-
-- How the Host adds seating capacity without replacing the Waiter.
-- How ComboMeal represents its two components.
-- How combo selection is determined.
-- How Happy Hour activation, duration and recovery are coordinated.
-- How VIP and Happy Hour discounts are ordered and rounded.
-- Why any earlier classes or interfaces needed modification.
-- What tests demonstrate that earlier behaviour still works.
+- **Host:** a separate staff object that the controller asks before the
+  Waiter. The controller still only accepts one valid action from each staff
+  member, so the Host adds one extra seating per turn and the Waiter keeps all
+  of its tasks.
+- **ComboMeal:** holds its two `MenuItem` components and works out its price
+  and units from them. Every other class sees it as a normal `MenuItem`: the
+  Chef, `Order` and pricing code did not change.
+- **Combo selection:** even-ID Regular/VIP customers upgrade their usual dish
+  to the combo containing it. The rule finds combos by name, so with no combos
+  on the menu nothing changes.
+- **Happy Hour:** the controller asks at turn start, then applies recovery to
+  customers where `losesSatisfactionAtTurnEnd()` is true (the same "waiting
+  for a table or food" test that the waiting loss uses). `HappyHourPricing`
+  shares the same `HappyHour` object, so prices change only on active turns.
+- **Discount order and rounding:** `StandardPricing` gives the customer's own
+  bill (VIP 10% off, nearest cent). `HappyHourPricing` then takes 20% off that,
+  rounding to the nearest cent (`(price * 80 + 50) / 100`). VIP Burger:
+  1500 -> 1350 -> $10.80.
+- **Earlier behaviour still works:** `StaffRulesTest`, `ExtensionSeamsTest`,
+  `RandomGamesTest`, `ControllerSmokeTest` and `Stage2CustomersTest` pass with
+  no changes. `Stage3Test` also runs the Stage 2 setup through the old
+  constructor and checks that the Host and Happy Hour never appear.
 
 ## UML Diagrams and Report
 
