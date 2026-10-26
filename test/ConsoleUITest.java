@@ -30,15 +30,61 @@ public class ConsoleUITest {
      */
     static class RecordingUI implements GameUI {
 
+        // Stage 3: the turn the recorded player switches on Happy Hour
+        // On turn 4 the VIP (#2) orders the Salad + Pasta combo at $17.50, and on turn 5 the VIP recovers 95 -> 100
+        static final int HAPPY_HOUR_TURN = 4;
+
         final ControllerSmokeTest.AutoUI player = new ControllerSmokeTest.AutoUI(true);
         final List<String> lines = new ArrayList<>();
+
+        // Makes sure each kind of bad input is only typed once
+        boolean typedBadMenuInput = false, typedBadYesNo = false, triedInvalidHost = false;
 
         public void showTurnStart(GameState s) {}
         public void showMessage(String m) {}
         public void showTurnSummary(GameState s) {}
         public void showFinalResult(GameState s, GameResult r) {}
 
+        public boolean askHappyHourActivation(GameState s) {
+            // Type an answer that is not y or n once, to test input checking
+            if (!typedBadYesNo) {
+                lines.add("maybe");
+                typedBadYesNo = true;
+            }
+
+            boolean activate = s.getTurn() == HAPPY_HOUR_TURN;
+            lines.add(activate ? "y" : "n");
+            return activate;
+        }
+
+        public HostChoice askHostChoice(GameState s) {
+            HostChoice c;
+
+            if (s.getTurn() == 2 && !triedInvalidHost) {
+                // Try to seat customer 1, who is already seated, to check the Host choice is re-asked
+                triedInvalidHost = true;
+                c = new HostChoice(HostAction.SEAT_CUSTOMER, 1);
+            } else if (!s.getWaitingQueue().isEmpty() && s.findFreeTable().isPresent()) {
+                // Seat the first customer in the queue
+                c = new HostChoice(HostAction.SEAT_CUSTOMER, s.getWaitingQueue().get(0).getId());
+            } else {
+                c = HostChoice.waitTurn();
+            }
+
+            // Save the Host choice in the same format a player would type
+            if (c.action() == HostAction.WAIT) lines.add("0");
+            else { lines.add("1"); lines.add("" + c.customerId()); }
+
+            return c;
+        }
+
         public WaiterChoice askWaiterChoice(GameState s) {
+            // Type some malformed menu input before the first Waiter choice, to test input checking
+            if (!typedBadMenuInput) {
+                lines.addAll(List.of("abc", "7", "-1", ""));
+                typedBadMenuInput = true;
+            }
+
             WaiterChoice c = player.askWaiterChoice(s);
 
             // Save the Waiter choice in the same format a player would type
@@ -68,10 +114,14 @@ public class ConsoleUITest {
     static GameState newState() { return new GameState(GameConfig.TABLE_COUNT); }
 
 
-    // Creates a game using the standard menu, pricing and staff
+    // Creates a game set up the same way as Main (Stage 3: combos, Happy Hour pricing and the Host)
     static GameController game(GameState state, GameUI ui) {
-        Menu menu = Menu.standard();
-        return new GameController(state, ArrivalSchedule.stage2Setting(), new Waiter(menu, new StandardPricing()), new Chef(), new Cashier(), ui);
+        Menu menu = Menu.stage3();
+        HappyHour happyHour = new HappyHour();
+        PricingPolicy pricing = new HappyHourPricing(new StandardPricing(), happyHour, state::getTurn);
+
+        return new GameController(state, ArrivalSchedule.stage2Setting(),
+                new Host(), new Waiter(menu, pricing), new Chef(), new Cashier(), happyHour, ui);
     }
 
 
@@ -95,15 +145,13 @@ public class ConsoleUITest {
         RecordingUI recorder = new RecordingUI();
         game(newState(), recorder).run();
 
-        // Add some invalid inputs at the start to test input checking
-        List<String> victory = new ArrayList<>(List.of("abc", "7", "-1", ""));
-        victory.addAll(recorder.lines);
-        String victoryInput = String.join("\n", victory) + "\n";
+        // The recorder already typed some invalid inputs to test input checking
+        String victoryInput = String.join("\n", recorder.lines) + "\n";
 
 
-        // Create a losing game where both staff wait every turn
+        // Create a losing game: Happy Hour is never switched on and the Host, Waiter and Chef wait every turn
         List<String> defeat = new ArrayList<>();
-        for (int i = 0; i < 36; i++) defeat.add("0");
+        for (int i = 0; i < GameConfig.MAX_TURNS; i++) defeat.addAll(List.of("n", "0", "0", "0"));
         String defeatInput = String.join("\n", defeat) + "\n";
 
 
@@ -123,6 +171,17 @@ public class ConsoleUITest {
         check("chosen dish is shown when order is placed", v.contains("Took order from customer 1: Burger ($15.00)."));
         check("turn summary shows turns used", v.contains("Turns used: 18"));
 
+        // Stage 3 features in the victory replay
+        check("Happy Hour answer that is not y/n is rejected", v.contains("Please enter y or n."));
+        check("Host seats a customer", v.contains("Host: Seated customer 1 at table 1."));
+        check("invalid Host choice explained and re-asked", v.contains("Customer 1 is not waiting in the queue."));
+        check("Happy Hour shows its remaining duration (2 then 1 turn left)",
+                v.contains("Happy Hour: ACTIVE, 2 turn(s) left") && v.contains("Happy Hour: ACTIVE, 1 turn(s) left"));
+        check("VIP orders the Salad + Pasta combo in Happy Hour: $24.30 x 0.9 x 0.8 = $17.50",
+                v.contains("Took order from customer 2: Salad + Pasta Combo ($17.50)."));
+        check("waiting customer recovers 15 satisfaction during Happy Hour", v.contains("Customer 2 recovers satisfaction: 95 -> 100."));
+        check("Happy Hour shown as used after it ends", v.contains("Happy Hour: used."));
+
 
         // Replay the losing inputs and check the results
         String d = replay(defeatInput, r);
@@ -137,7 +196,8 @@ public class ConsoleUITest {
         boolean ended = false;
 
         try {
-            game(newState(), new ConsoleUI(new ByteArrayInputStream("1\nabc\n".getBytes(StandardCharsets.UTF_8)), out)).run();
+            // "n" = no Happy Hour, "1" = Host seats, then a customer id that is not a number
+            game(newState(), new ConsoleUI(new ByteArrayInputStream("n\n1\nabc\n".getBytes(StandardCharsets.UTF_8)), out)).run();
         } catch (InputEndedException e) {
             ended = true;
         }

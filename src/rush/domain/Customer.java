@@ -12,6 +12,16 @@ public abstract class Customer {
     public static final int MAX_SATISFACTION = 100;
 
 
+    /**
+     * Food rule shared by Regular and VIP customers: Salad, Burger, Pasta by customer ID
+     * (Stage 3 moved this here, it used to be copied in both subclasses)
+     */
+    private static final String[] DISH_CYCLE = {"Salad", "Burger", "Pasta"};
+
+    // Stage 3: the combo each dish is upgraded to, in the same positions as DISH_CYCLE
+    private static final String[] COMBO_CYCLE = {"Salad + Burger Combo", "Burger + Pasta Combo", "Salad + Pasta Combo"};
+
+
     private final int id;
 
     // Starts at full satisfaction and decreases while waiting
@@ -60,6 +70,31 @@ public abstract class Customer {
      * By default, customers pay the full price
      */
     public int billFor(MenuItem item) { return item.getPriceCents(); }
+
+
+    /**
+     * The ID food rule used by Regular and VIP customers
+     * The usual dish is DISH_CYCLE[id % 3]: id 1 Burger, id 2 Pasta, id 3 Salad, and so on
+     * Stage 3: a customer with an even ID upgrades to the combo containing their usual dish,
+     * if the menu has it (id 2 Salad + Pasta, id 4 Burger + Pasta, id 6 Salad + Burger)
+     * With no combos on the menu, everyone gets their usual dish, as in Stage 1 and 2
+     */
+    protected final MenuItem chooseByIdRule(Menu menu) {
+        int slot = getId() % DISH_CYCLE.length;
+
+        if (getId() % 2 == 0) {
+            MenuItem combo = menu.findByName(COMBO_CYCLE[slot]);
+            if (combo != null) return combo;
+        }
+
+        MenuItem dish = menu.findByName(DISH_CYCLE[slot]);
+
+        if (dish == null) {
+            throw new IllegalStateException("The menu has no " + DISH_CYCLE[slot]);
+        }
+
+        return dish;
+    }
 
 
     public int getId() { return id; }
@@ -122,6 +157,15 @@ public abstract class Customer {
      */
     public void loseWaitingSatisfaction() {
         satisfaction = Math.max(0, satisfaction - getWaitingLoss());
+    }
+
+
+    /**
+     * Stage 3: raises satisfaction (used by Happy Hour)
+     * Satisfaction cannot go above the maximum
+     */
+    public void recoverSatisfaction(int amount) {
+        satisfaction = Math.min(MAX_SATISFACTION, satisfaction + amount);
     }
 
 

@@ -16,13 +16,6 @@ public class VIPCustomer extends Customer {
     private static final int BILL_PERCENT = 90;
 
 
-    /**
-     * Same food rule as RegularCustomer: Salad, Burger, Pasta by customer ID
-     * The dishes are named, so a bigger menu (e.g. combos in Stage 3) does not change the choice
-     */
-    private static final String[] DISH_CYCLE = {"Salad", "Burger", "Pasta"};
-
-
     public VIPCustomer(int id) { super(id); }
 
 
@@ -32,18 +25,12 @@ public class VIPCustomer extends Customer {
 
 
     /**
-     * Chooses the dish assigned to this customer ID
+     * Same food rule as RegularCustomer: Salad, Burger, Pasta by customer ID,
+     * with even IDs upgrading to a combo when the menu has one
      */
     @Override
     public MenuItem chooseItem(Menu menu) {
-        String dish = DISH_CYCLE[getId() % DISH_CYCLE.length];
-        MenuItem item = menu.findByName(dish);
-
-        if (item == null) {
-            throw new IllegalStateException("The menu has no " + dish);
-        }
-
-        return item;
+        return chooseByIdRule(menu);
     }
 
 

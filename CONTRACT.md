@@ -60,3 +60,11 @@ Shared and frozen (change only with all-hands agreement): `CustomerState`, `Orde
 
 ## Stage 1 rule
 Stage 1 contains NO Stage 2/3 features. Record every edit to an earlier file, with the reason, in the change log.
+
+## Stage 3 changes to shared items
+- `GameUI`: added `askHostChoice` and `askHappyHourActivation` as default methods (Host waits / Happy Hour off), so existing
+  implementations still compile and behave the same.
+- `Customer`: added public `recoverSatisfaction(int)` (Happy Hour recovery, planned seam) and protected `chooseByIdRule(Menu)`
+  (shared Regular/VIP food rule). No existing public method changed.
+- `GameController`: new 8-argument constructor with `Host` and `HappyHour`. The 6-argument constructor still runs the Stage 1/2 game.
+- Agreed decision: the **Host acts before the Waiter** (see `DESIGN_DECISIONS.md` 9).

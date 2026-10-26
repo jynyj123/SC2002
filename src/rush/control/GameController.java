@@ -2,12 +2,15 @@ package rush.control;
 
 
 import rush.domain.Customer;
+import rush.domain.HappyHour;
 import rush.staff.ActionResult;
 import rush.staff.Cashier;
 import rush.staff.Chef;
+import rush.staff.Host;
 import rush.staff.Waiter;
 import rush.ui.ChefChoice;
 import rush.ui.GameUI;
+import rush.ui.HostChoice;
 import rush.ui.WaiterChoice;
 
 
@@ -24,23 +27,43 @@ public class GameController {
     // Decides which customer arrives on each turn
     private final ArrivalSchedule arrivals;
 
-    // The three staff members used during the game
+    // The staff members used during the game
+    // host is null in the Stage 1 and 2 game, which has no Host
+    private final Host host;
     private final Waiter waiter;
     private final Chef chef;
     private final Cashier cashier;
+
+    // Stage 3 Happy Hour, null in the Stage 1 and 2 game
+    // The same object is inside the Waiter's HappyHourPricing, so switching it on here changes prices
+    private final HappyHour happyHour;
 
     // Handles all messages and user input
     private final GameUI ui;
 
 
-    // Saves the objects needed to run the game
+    /**
+     * Stage 1 and 2 game: Waiter, Chef and Cashier only, no Host or Happy Hour
+     * Kept so the earlier stages and their tests still run unchanged
+     */
     public GameController(GameState state, ArrivalSchedule arrivals,
                           Waiter waiter, Chef chef, Cashier cashier, GameUI ui) {
+        this(state, arrivals, null, waiter, chef, cashier, null, ui);
+    }
+
+
+    /**
+     * Stage 3 game: adds the Host and Happy Hour
+     */
+    public GameController(GameState state, ArrivalSchedule arrivals, Host host,
+                          Waiter waiter, Chef chef, Cashier cashier, HappyHour happyHour, GameUI ui) {
         this.state = state;
         this.arrivals = arrivals;
+        this.host = host;
         this.waiter = waiter;
         this.chef = chef;
         this.cashier = cashier;
+        this.happyHour = happyHour;
         this.ui = ui;
     }
 
@@ -53,7 +76,9 @@ public class GameController {
             state.setTurn(turn);
 
             stepArrivals();                 // step 1
-            showTurnStart();                // show the start of the turn
+            ui.showTurnStart(state);        // show the start of the turn
+            stepHappyHour();                // Stage 3: offer Happy Hour, recovery while it is active
+            showAvailableTasks();           // what each staff member can do
             stepManagerChoices();           // steps 2 and 3
             stepEatingAndPayment();         // step 4
             stepWaitingAndAbandonment();    // step 5
@@ -81,10 +106,61 @@ public class GameController {
 
 
     /**
-     * Shows the current game state and the tasks each staff member can do
+     * Stage 3: at the start of the turn, offers Happy Hour if it has not been used,
+     * then shows how long it has left
+     * While it is active, customers still waiting for a table or food recover satisfaction
      */
-    private void showTurnStart() {
-        ui.showTurnStart(state);
+    void stepHappyHour() {
+        if (happyHour == null) {
+            return;
+        }
+
+        int turn = state.getTurn();
+
+        // Offer Happy Hour until it has been used
+        if (!happyHour.isUsed()) {
+            ui.showMessage("Happy Hour: available (once per game, lasts this turn and the next).");
+
+            if (ui.askHappyHourActivation(state)) {
+                happyHour.activate(turn);
+            }
+        }
+
+        if (!happyHour.isActiveOn(turn)) {
+            if (happyHour.isUsed()) {
+                ui.showMessage("Happy Hour: used.");
+            }
+            return;
+        }
+
+        // The game ends after the last turn, so do not count turns past it
+        int turnsLeft = Math.min(happyHour.turnsRemaining(turn), GameConfig.MAX_TURNS - turn + 1);
+        ui.showMessage("Happy Hour: ACTIVE, " + turnsLeft + " turn(s) left including this one. Orders taken now get 20% off.");
+
+        // Customers still waiting for a table or food are the ones who lose satisfaction at turn end
+        for (Customer customer : state.getAllCustomers()) {
+            if (!customer.losesSatisfactionAtTurnEnd()) {
+                continue;
+            }
+
+            int before = customer.getSatisfaction();
+            customer.recoverSatisfaction(HappyHour.RECOVERY);
+
+            ui.showMessage("Customer " + customer.getId() + " recovers satisfaction: "
+                    + before + " -> " + customer.getSatisfaction() + ".");
+        }
+    }
+
+
+    /**
+     * Shows the tasks each staff member can do
+     */
+    private void showAvailableTasks() {
+        if (host != null) {
+            for (String task : host.describeAvailableTasks(state)) {
+                ui.showMessage("Host can: " + task);
+            }
+        }
 
         for (String task : waiter.describeAvailableTasks(state)) {
             ui.showMessage("Waiter can: " + task);
@@ -96,10 +172,14 @@ public class GameController {
     }
 
     /**
-     * Gets the Waiter choice first, then the Chef choice
+     * Gets the Host choice first (Stage 3), then the Waiter choice, then the Chef choice
+     * The Host goes first so the Waiter can take the order of a customer the Host just seated
      * If the choice is invalid, the user is asked again
      */
     void stepManagerChoices() {
+        if (host != null) {
+            promptUntilAccepted(this::askHostOnce);
+        }
         promptUntilAccepted(this::askWaiterOnce);
         promptUntilAccepted(this::askChefOnce);
     }
@@ -125,6 +205,19 @@ public class GameController {
                 return;
             }
         }
+    }
+
+
+    /**
+     * Stage 3: asks the Host for a choice and carries it out
+     */
+    private ActionResult askHostOnce() {
+        HostChoice choice = ui.askHostChoice(state);
+
+        return switch (choice.action()) {
+            case WAIT          -> ActionResult.ok("Host waits this turn.");
+            case SEAT_CUSTOMER -> host.seatCustomer(state, choice.customerId());
+        };
     }
 
 
