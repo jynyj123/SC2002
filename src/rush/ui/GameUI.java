@@ -28,4 +28,17 @@ public interface GameUI {
 
     //Shows whether the game was won or lost
     void showFinalResult(GameState state, GameResult result);
+
+
+    /*
+     * Stage 3 methods. They are default methods so that UIs written before Stage 3
+     * (including the test players) still compile and behave as before:
+     * the Host waits and Happy Hour is never switched on
+     */
+
+    //Asks the player what the Host should do this turn
+    default HostChoice askHostChoice(GameState state) { return HostChoice.waitTurn(); }
+
+    //Asks the player whether to switch on Happy Hour at the start of this turn
+    default boolean askHappyHourActivation(GameState state) { return false; }
 }

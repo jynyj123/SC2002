@@ -116,6 +116,44 @@ public class ConsoleUI implements GameUI {
 
 
     /**
+     * Stage 3: asks the user whether to switch on Happy Hour this turn
+     */
+    @Override
+    public boolean askHappyHourActivation(GameState state) {
+        while (true) {
+            out.print("Switch on Happy Hour now? (y/n): ");
+            out.flush();
+            String answer = readLine().trim().toLowerCase();
+
+            if (answer.equals("y") || answer.equals("yes")) return true;
+            if (answer.equals("n") || answer.equals("no")) return false;
+
+            out.println("  Please enter y or n.");
+        }
+    }
+
+
+    /**
+     * Stage 3: asks the user what the Host should do this turn
+     */
+    @Override
+    public HostChoice askHostChoice(GameState state) {
+        out.println("Host task:");
+        out.println("  1) Seat a queued customer");
+        out.println("  0) Wait");
+
+        int option = readInt("Choice: ", 0, 1);
+
+        if (option == 0) {
+            return HostChoice.waitTurn();
+        }
+
+        return new HostChoice(HostAction.SEAT_CUSTOMER,
+                readInt("Customer id: ", Integer.MIN_VALUE, Integer.MAX_VALUE));
+    }
+
+
+    /**
      * Asks the user what the Waiter should do this turn
      */
     @Override

@@ -11,7 +11,6 @@ import rush.domain.MenuItem;
 import rush.domain.Money;
 import rush.domain.Order;
 import rush.domain.PricingPolicy;
-import rush.domain.Table;
 
 
 /**
@@ -33,28 +32,10 @@ public class Waiter {
 
     /**
      * Seats a waiting customer at the first free table
+     * The checks are shared with the Host (see Seating)
      */
     public ActionResult seatCustomer(GameState state, int customerId) {
-        Customer customer = state.findCustomer(customerId).orElse(null);
-
-        // Check that the customer exists
-        if (customer == null) {
-            return ActionResult.fail("There is no customer with id " + customerId + ".");
-        }
-
-        // Check that the customer is waiting in the queue
-        if (customer.getState() != CustomerState.WAITING_IN_QUEUE) {
-            return ActionResult.fail("Customer " + customerId + " is not waiting in the queue.");
-        }
-
-        // Check that there is a free table
-        Table table = state.findFreeTable().orElse(null);
-        if (table == null) {
-            return ActionResult.fail("There is no free table.");
-        }
-
-        customer.seatAt(table);
-        return ActionResult.ok("Seated customer " + customerId + " at table " + table.getId() + ".");
+        return Seating.seatCustomer(state, customerId);
     }
 
 

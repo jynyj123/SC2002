@@ -30,6 +30,24 @@ public class Menu {
     }
 
 
+    /**
+     * Stage 3 menu: the three standard dishes plus every combo of two different dishes
+     * The combos are built from the same dish objects, so they follow the dishes' prices
+     * Salad + Burger $21.60 (2 units), Salad + Pasta $24.30 (3 units), Burger + Pasta $29.70 (3 units)
+     */
+    public static Menu stage3() {
+        MenuItem salad = new BasicMenuItem("Salad", 900, 1);
+        MenuItem burger = new BasicMenuItem("Burger", 1500, 1);
+        MenuItem pasta = new BasicMenuItem("Pasta", 1800, 2);
+
+        return new Menu(List.of(
+                salad, burger, pasta,
+                new ComboMeal(salad, burger),
+                new ComboMeal(salad, pasta),
+                new ComboMeal(burger, pasta)));
+    }
+
+
     // Returns all menu items, but does not allow the list to be changed from outside
     public List<MenuItem> getItems() { return Collections.unmodifiableList(items); }
 
