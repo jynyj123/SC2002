@@ -82,9 +82,17 @@ public abstract class Customer {
     protected final MenuItem chooseByIdRule(Menu menu) {
         int slot = getId() % DISH_CYCLE.length;
 
-        if (getId() % 2 == 0) {
+        // Even IDs upgrade to a combo, but only on a menu that has combos (Stage 3)
+        if (getId() % 2 == 0 && menu.hasCombos()) {
             MenuItem combo = menu.findByName(COMBO_CYCLE[slot]);
-            if (combo != null) return combo;
+
+            // A combo menu that is missing this combo (e.g. built as "Burger + Salad" instead of
+            // "Salad + Burger") is a setup mistake: stop instead of quietly serving the plain dish
+            if (combo == null) {
+                throw new IllegalStateException("The menu has combos but no " + COMBO_CYCLE[slot]);
+            }
+
+            return combo;
         }
 
         MenuItem dish = menu.findByName(DISH_CYCLE[slot]);

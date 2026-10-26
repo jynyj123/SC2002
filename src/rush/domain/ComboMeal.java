@@ -44,6 +44,10 @@ public final class ComboMeal implements MenuItem {
     @Override public int getPrepUnits() { return first.getPrepUnits() + second.getPrepUnits(); }
 
 
+    // A combo is the one kind of menu item that is a combo
+    @Override public boolean isCombo() { return true; }
+
+
     // The two items inside the combo
     public List<MenuItem> getComponents() { return List.of(first, second); }
 
