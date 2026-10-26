@@ -411,7 +411,7 @@ rush.Main
 ### Get the Source
 
 ```bash
-git clone [https://github.com/jynyj123/test.git](https://github.com/jynyj123/test.git)
+git clone [https://github.com/jynyj123/SC2002.git](https://github.com/jynyj123/SC2002.git)
 cd test
 ```
 
