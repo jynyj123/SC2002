@@ -14,4 +14,7 @@ public interface MenuItem {
 
     // Number of preparation units the Chef needs for this item
     int getPrepUnits();
+
+    // True only for combos; lets a Menu tell whether it offers combos without a type check
+    default boolean isCombo() { return false; }
 }

@@ -219,6 +219,30 @@ public class Stage3Test {
         check("with no combos on the menu the Stage 1/2 rule is unchanged", standardUnchanged);
 
 
+        // 2b. Setup mistakes fail loudly instead of silently changing what customers order
+        check("Stage 3 menu offers combos, standard menu does not",
+                menu.hasCombos() && !Menu.standard().hasCombos());
+        boolean dishPricesMatch = true;
+        for (MenuItem dish : Menu.standard().getItems()) {
+            MenuItem same = menu.findByName(dish.getName());
+            dishPricesMatch &= same != null && same.getPriceCents() == dish.getPriceCents()
+                    && same.getPrepUnits() == dish.getPrepUnits();
+        }
+        check("Stage 3 menu uses the same dish prices and units as the standard menu", dishPricesMatch);
+        Menu reversedCombos = new Menu(List.of(salad, burger, pasta,
+                new ComboMeal(burger, salad), new ComboMeal(pasta, salad), new ComboMeal(pasta, burger)));
+        boolean threwOnMissingCombo = false;
+        try {
+            new RegularCustomer(2).chooseItem(reversedCombos);
+        } catch (IllegalStateException e) {
+            threwOnMissingCombo = e.getMessage().contains("Salad + Pasta Combo");
+        }
+        check("combo menu missing a combo name: an even-ID customer gets an error, not a plain dish",
+                threwOnMissingCombo);
+        check("odd-ID customers are unaffected by a misnamed combo menu",
+                new RegularCustomer(1).chooseItem(reversedCombos) == burger);
+
+
         // 3. Happy Hour timing: once per game, active on the activation turn and the next
         HappyHour hh = new HappyHour();
         boolean unusedOk = !hh.isUsed() && !hh.isActiveOn(1) && hh.turnsRemaining(1) == 0;
