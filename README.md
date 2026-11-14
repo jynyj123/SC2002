@@ -126,7 +126,7 @@ javac -cp out -d testout test/*.java
 for t in StaffRulesTest ControllerSmokeTest RandomGamesTest ConsoleUITest ExtensionSeamsTest Stage2CustomersTest Stage3Test; do java -cp out:testout $t; done
 ```
 
-All seven programs passed in the recorded Stage 3 run on 26 October 2026. `Stage3Test` has 43 checks and 3,000 random games. Earlier stages contain only the tests that existed at their tags.
+All seven programs passed in the recorded Stage 3 run on 27 October 2026. `Stage3Test` has 43 checks and 3,000 random games. Earlier stages contain only the tests that existed at their tags.
 
 **Replay a victory and a defeat.** `ConsoleUITest` creates `test/victory_input.txt` and `test/defeat_input.txt`. Use the replay files from the same stage as the application.
 
