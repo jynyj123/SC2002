@@ -74,8 +74,8 @@ On Windows use `;` instead of `:` in the classpath.
 
 Only `ConsoleUITest` changed for Stage 3 (it mirrors `Main`). The other Stage 1/2 tests pass with no edits.
 
-### Stage 3 results (26 Oct 2026, Windows 11, JDK 26)
+### Stage 3 results (27 Oct 2026, Windows 11, JDK 26)
 All seven programs pass. `ControllerSmokeTest` prints `good: VICTORY, bad: DEFEAT`.
-`Stage3Test`: 39 checks. Its 3000 random games used Happy Hour in 2682 games, with no crashes or mismatches.
+`Stage3Test`: 43 checks. Its 3000 random games used Happy Hour in 2682 games, with no crashes or mismatches.
 We also broke three rules on purpose to check the tests catch them: Happy Hour rounding truncating, recovery applied to every
 customer, and Happy Hour lasting 3 turns. `Stage3Test` failed each time.
