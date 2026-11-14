@@ -4,7 +4,7 @@ The game was built in three runnable stages, each saved as a Git tag: `stage-1`,
 
 ## Contents
 
-[Links](#links) | [Team](#team) | [Game Rules](#game-rules) | [How to Play](#how-to-play) | [Build and Run](#build-and-run) | [Tests and Results](#tests-and-results) | [Stage Changes](#stage-changes) | [AI History](#ai-history) | [Video](#presentation-video)
+[Links](#links) | [Team](#team) | [Game Rules](#game-rules) | [How to Play](#how-to-play) | [Build and Run](#build-and-run) | [Tests and Results](#tests-and-results) | [Stage Changes](#stage-changes) | [Video](#presentation-video)
 
 ## Links
 
@@ -214,4 +214,3 @@ Video: [VIDEO_LINK]
 | 6 | One victory and one defeat (separate reproducible runs) | [GitHub account] | [mm:ss] |
 | 7 | The stage tag comparisons and the diagrams (class diagrams for Stages 1 to 3) | [GitHub account] | [mm:ss] |
 | 8 | The selected use case and sequence diagram | [GitHub account] | [mm:ss] |
-| 9 | Individual contributions and key learning | All members | [mm:ss] |
