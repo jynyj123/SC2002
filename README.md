@@ -13,7 +13,7 @@ The game was built in three runnable stages, each saved as a Git tag: `stage-1`,
 | Repository | https://github.com/jynyj123/SC2002 |
 | Class diagrams (Stage 1, 2, 3) | [UML folder](https://github.com/jynyj123/SC2002/tree/main/UML) |
 | Sequence diagram (Stage 3: VIP, combo and Happy Hour) | [UML folder](https://github.com/jynyj123/SC2002/tree/main/UML) |
-| Final report (PDF) | [REPORT_LINK] |
+| Final report (PDF) | [PDF Report](https://github.com/jynyj123/SC2002/blob/main/PDF%20Report.pdf) |
 | Design decisions | [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md) |
 | Test notes | [TEST_NOTES.md](TEST_NOTES.md) |
 
@@ -203,8 +203,8 @@ The older six-argument `GameController` constructor still runs Stage 1 and 2 gam
 
 Video: (https://entuedu-my.sharepoint.com/:v:/g/personal/jng342_e_ntu_edu_sg/IQBSqF8TOdoIQaneqYXcBUcfAbj5D-gLf0hZGl8zdnzzN0s?e=1xDtks)
 
-| # | Segment | Presenter | Timestamp |
-| --- | --- | --- | --- |
+| # | Segment | Timestamp |
+| --- | --- | --- |
 | 1 | The game launching from the submitted project |[00:00] |
 | 2 | Meaningful manager choices, including a decision where staff are constrained| [01:59] |
 | 3 | A dish going READY → SERVED → payment | [04:49] |
@@ -212,9 +212,3 @@ Video: (https://entuedu-my.sharepoint.com/:v:/g/personal/jng342_e_ntu_edu_sg/IQB
 | 5 | A Stage 3 feature | [08:48] |
 | 6 | One victory and one defeat (separate reproducible runs) | [10:29] |
 | 7 | The stage tag comparisons and the diagrams (class diagrams for Stages 1 to 3) | [12:03] |
-| 3 | A dish going READY → SERVED → payment | [GitHub account] | [mm:ss] |
-| 4 | A VIP or Critic behaviour | [GitHub account] | [mm:ss] |
-| 5 | A Stage 3 feature | [GitHub account] | [mm:ss] |
-| 6 | One victory and one defeat (separate reproducible runs) | [GitHub account] | [mm:ss] |
-| 7 | The stage tag comparisons and the diagrams (class diagrams for Stages 1 to 3) | [GitHub account] | [mm:ss] |
-| 8 | The selected use case and sequence diagram | [GitHub account] | [mm:ss] |
